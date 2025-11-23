@@ -1,18 +1,126 @@
-# React + Vite
+# HealthTrack - Wellness & Fitness Tracking Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![HealthTrack Banner](public/images/fitness-gear.jpg)
 
-Currently, two official plugins are available:
+## 📋 Project Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+HealthTrack is a modern, responsive web application designed to help users track their daily wellness activities, meals, and exercises. The application provides an intuitive interface for logging daily health data and calculates a comprehensive wellness score based on user activities.
 
-## React Compiler
+### Key Features
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **📝 Activity Logging**: Track daily activities with categories (Work, Study, Leisure, Sleep, Other) and duration
+- **🍎 Meal Tracking**: Record meals with type (Breakfast, Lunch, Dinner, Snack), descriptions, and calorie counts
+- **🏋️ Exercise Monitoring**: Log workouts with type, duration, and intensity levels (Low, Medium, High)
+- **⭐ Wellness Score**: Automatic calculation of daily wellness score based on logged activities
+- **📅 Date Navigation**: Easy switching between dates to view historical data
+- **💾 Local Storage**: All data stored locally in browser for privacy and offline access
+- **📱 Responsive Design**: Fully responsive interface that works on desktop, tablet, and mobile devices
 
-Note: This will impact Vite dev & build performances.
+### Wellness Scoring System
 
-## Expanding the ESLint configuration
+The wellness score is calculated out of 100 points based on:
+- **Activities**: Up to 25 points (target: 5 activities)
+- **Exercise**: Up to 50 points (target: 30 minutes)
+- **Meals**: Up to 10 points (target: 3 meals)
+- **Calorie Balance**: Up to 15 points (optimal: 1800-2500 calories)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Technologies Used
+
+- **Frontend Framework**: React 19.2.0
+- **Routing**: React Router DOM 7.9.6
+- **Styling**: Tailwind CSS 4.1.17
+- **Build Tool**: Vite 7.2.2
+- **State Management**: React Hooks (useState, useEffect)
+- **Data Persistence**: Browser LocalStorage API
+- **Language**: JavaScript (ES6+)
+
+## 📦 Setup Instructions
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn package manager
+
+### Installation Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/abdelrahman-assoum/web2-project1.git
+   cd web2-project1
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   
+   Navigate to `http://localhost:5173` (or the URL shown in your terminal)
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint for code quality
+
+## 📁 Project Structure
+
+```
+web2-project1/
+├── public/
+│   └── images/
+│       └── fitness-gear.jpg
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   └── Layout/
+│   │       ├── Navbar.jsx
+│   │       └── Footer.jsx
+│   ├── hooks/
+│   │   └── useDailyData.js
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── About.jsx
+│   │   ├── Features.jsx
+│   │   ├── Contact.jsx
+│   │   └── DailyLog.jsx
+│   ├── App.jsx
+│   ├── App.css
+│   ├── index.css
+│   └── main.jsx
+├── index.html
+├── package.json
+├── vite.config.js
+├── eslint.config.js
+└── README.md
+```
+
+## 🖥️ Screenshots
+
+### Home Page (Desktop)
+![Home Page Desktop](screenshots/home-desktop.png)
+*Landing page with hero section and feature overview*
+
+### Daily Log Interface (Desktop)
+![Daily Log Desktop](screenshots/dailylog-desktop.png)
+*Main tracking interface with activity, meal, and exercise logging*
+
+### Features Page (Desktop)
+![Features Page Desktop](screenshots/features-desktop.png)
+*Comprehensive feature showcase with all features displayed*
+
+### Responsive Design - Mobile Views
+
+<p float="left">
+  <img src="screenshots/hero-mobile.png" width="45%" alt="Home Page Mobile" />
+  <img src="screenshots/dailylog-mobile.png" width="45%" alt="Daily Log Mobile" />
+</p>
+
+*Mobile-optimized interface: Home page (left) and Daily Log (right)*
