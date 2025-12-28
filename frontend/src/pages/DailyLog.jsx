@@ -257,7 +257,6 @@ const DailyLog = () => {
               >
                 <option>Work</option>
                 <option>Study</option>
-                <option>Leisure</option>
                 <option>Sleep</option>
                 <option>Other</option>
               </select>
