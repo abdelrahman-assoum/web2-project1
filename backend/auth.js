@@ -1,8 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import db from "./db.js";
 
-const jwtSecret = "LIU";
+dotenv.config();
+
+const jwtSecret = process.env.JWT_SECRET;
 
 export const setupAuthRoutes = (app) => {
   /* ----------------------------------------------------

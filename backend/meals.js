@@ -21,30 +21,27 @@ export const setupMealsRoutes = (app, authenticate) => {
   });
 
   /* ----------------------------------------------------
-     GET MEAL BY ID
+     GET MEALS BY DATE
   ---------------------------------------------------- */
-  app.get("/meals/:id", authenticate, (req, res) => {
+  app.get("/meals/date/:date", authenticate, (req, res) => {
     const user_id = req.user_id;
-    const id = req.params.id;
+    const { date } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ message: "Meal ID is required" });
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
     }
 
-    if (isNaN(Number(id))) {
-      return res.status(400).json({ message: "Meal ID must be a number" });
-    }
+    const q =
+      "SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY date DESC";
 
-    const q = "SELECT * FROM meals WHERE meal_id = ? AND user_id = ?";
-
-    db.query(q, [id, user_id], (err, data) => {
+    db.query(q, [user_id, date], (err, data) => {
       if (err) {
         return res.status(500).json({ message: "Database error", error: err });
       } else {
         if (data.length === 0) {
-          return res.status(404).json({ message: "Meal not found" });
+          return res.status(200).json([]);
         }
-        return res.status(200).json(data[0]);
+        return res.status(200).json(data);
       }
     });
   });

@@ -1,19 +1,21 @@
 import cors from "cors";
-import mysql from "mysql";
 import express from "express";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import db from "./db.js";
 import { setupAuthRoutes } from "./auth.js";
 import { setupActivitiesRoutes } from "./activities.js";
 import { setupMealsRoutes } from "./meals.js";
 import { setupExercisesRoutes } from "./exercises.js";
 
+dotenv.config();
+
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-const jwtSecret = "LIU"; // Use environment variable in production
+const jwtSecret = process.env.JWT_SECRET;
 
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -29,15 +31,6 @@ app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
 
-// Database connection
-const db = mysql.createPool({
-  port: 3307,
-  host: "localhost",
-  user: "admin",
-  password: "password",
-  database: "healthtracker",
-});
-
 db.getConnection((err) => {
   if (err) {
     console.error("Database connection failed:", err);
@@ -46,7 +39,6 @@ db.getConnection((err) => {
   }
 });
 
-// Setup routes
 setupAuthRoutes(app);
 setupActivitiesRoutes(app, authenticate);
 setupMealsRoutes(app, authenticate);

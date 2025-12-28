@@ -21,10 +21,35 @@ export const setupActivitiesRoutes = (app, authenticate) => {
   });
 
   /* ----------------------------------------------------
+     GET ACTIVITIES BY DATE
+  ---------------------------------------------------- */
+  app.get("/activities/date/:date", authenticate, (req, res) => {
+    const user_id = req.user_id;
+    const { date } = req.params;
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    const q =
+      "SELECT * FROM activities WHERE user_id = ? AND date = ? ORDER BY date DESC";
+
+    db.query(q, [user_id, date], (err, data) => {
+      if (err) {
+        return res.status(500).json({ message: "Database error", error: err });
+      } else {
+        if (data.length === 0) {
+          return res.status(200).json([]);
+        }
+        return res.status(200).json(data);
+      }
+    });
+  });
+
+  /* ----------------------------------------------------
      ADD NEW ACTIVITY
   ---------------------------------------------------- */
   app.post("/activities", authenticate, (req, res) => {
-
     const user_id = req.user_id;
     const { activity_title, activity_type, duration_min, date } = req.body;
 
