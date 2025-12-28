@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useDailyData from "../hooks/useDailyData.js";
 
 const DailyLog = () => {
   const { date } = useParams();
   const navigate = useNavigate();
-  const { dayData, addActivity, addMeal, addExercise, removeItem } =
+  const { dayData, addActivity, addMeal, addExercise, removeItem, isLoading } =
     useDailyData(date);
 
   const [activityForm, setActivityForm] = useState({
@@ -24,43 +24,108 @@ const DailyLog = () => {
     intensity: "Medium",
   });
 
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => {
+        setMessage({ type: "", text: "" });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  const [deleteDialog, setDeleteDialog] = useState({
+    show: false,
+    type: "",
+    id: "",
+    name: "",
+  });
+
   const handleDateChange = (e) => {
     navigate(`/day/${e.target.value}`);
   };
 
-  const handleAddActivity = (e) => {
+  const handleDelete = async () => {
+    try {
+      await removeItem(deleteDialog.type, deleteDialog.id);
+      setMessage({
+        type: "success",
+        text: `${deleteDialog.type.slice(0, -1)} deleted successfully!`,
+      });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text:
+          err.message || `Failed to delete ${deleteDialog.type.slice(0, -1)}`,
+      });
+    }
+    setDeleteDialog({ show: false, type: "", id: "", name: "" });
+  };
+
+  const handleAddActivity = async (e) => {
     e.preventDefault();
     if (!activityForm.title || !activityForm.duration) {
-      alert("Please fill in title and duration.");
+      setMessage({ type: "error", text: "Please fill in title and duration." });
       return;
     }
-    addActivity({ ...activityForm, duration: parseInt(activityForm.duration) });
-    setActivityForm({ title: "", category: "Work", duration: "" });
+    try {
+      await addActivity({
+        ...activityForm,
+        duration: parseInt(activityForm.duration),
+      });
+      setActivityForm({ title: "", category: "Work", duration: "" });
+      setMessage({ type: "success", text: "Activity added successfully!" });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err.message || "Failed to add activity",
+      });
+    }
   };
 
-  const handleAddMeal = (e) => {
+  const handleAddMeal = async (e) => {
     e.preventDefault();
     if (!mealForm.description || !mealForm.calories) {
-      alert("Please fill in description and calories.");
+      setMessage({
+        type: "error",
+        text: "Please fill in description and calories.",
+      });
       return;
     }
-    addMeal({ ...mealForm, calories: parseInt(mealForm.calories) });
-    setMealForm({ mealType: "Breakfast", description: "", calories: "" });
+    try {
+      await addMeal({ ...mealForm, calories: parseInt(mealForm.calories) });
+      setMealForm({ mealType: "Breakfast", description: "", calories: "" });
+      setMessage({ type: "success", text: "Meal added successfully!" });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to add meal" });
+    }
   };
 
-  const handleAddExercise = (e) => {
+  const handleAddExercise = async (e) => {
     e.preventDefault();
     if (!exerciseForm.type || !exerciseForm.duration) {
-      alert("Please fill in type and duration.");
+      setMessage({ type: "error", text: "Please fill in type and duration." });
       return;
     }
-    addExercise({ ...exerciseForm, duration: parseInt(exerciseForm.duration) });
-    setExerciseForm({ type: "", duration: "", intensity: "Medium" });
+    try {
+      await addExercise({
+        ...exerciseForm,
+        duration: parseInt(exerciseForm.duration),
+      });
+      setExerciseForm({ type: "", duration: "", intensity: "Medium" });
+      setMessage({ type: "success", text: "Exercise added successfully!" });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err.message || "Failed to add exercise",
+      });
+    }
   };
 
   const activitiesCount = dayData.activities.length;
   const totalExerciseMinutes = dayData.exercises.reduce(
-    (sum, ex) => sum + ex.duration,
+    (sum, ex) => sum + ex.duration_min,
     0
   );
   const totalCalories = dayData.meals.reduce(
@@ -133,23 +198,38 @@ const DailyLog = () => {
 
   const scoreStatus = getScoreStatus(wellnessScore);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-orange-50 via-amber-50 to-yellow-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+          <p className="text-xl text-gray-600 font-semibold">
+            Loading your daily log...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-amber-50 to-yellow-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-            Daily Log
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600 mb-6">
-            Track your activities, meals, and workouts for{" "}
-            {new Date(date).toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-          <div className="inline-block bg-white rounded-xl shadow-md p-4 border border-gray-200">
+        <div className="mb-8 lg:flex lg:items-center lg:justify-between">
+          <div className="mb-6 lg:mb-0">
+            <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              Daily Log
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600">
+              Track your activities, meals, and workouts for
+              {new Date(date).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="w-full lg:w-auto lg:inline-block bg-white rounded-xl shadow-md p-4 border border-gray-200">
             <label className="block text-sm font-semibold mb-2 text-gray-700">
               📅 Select Date
             </label>
@@ -157,7 +237,7 @@ const DailyLog = () => {
               type="date"
               value={date}
               onChange={handleDateChange}
-              className="border-2 border-gray-300 rounded-lg px-4 py-2.5 text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer hover:border-orange-400 transition-colors duration-300 min-w-[200px]"
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer hover:border-orange-400 transition-colors duration-300"
             />
           </div>
         </div>
@@ -227,6 +307,23 @@ const DailyLog = () => {
           </div>
         </div>
 
+        {message.text && (
+          <div
+            className={`mb-6 p-4 rounded-lg border ${
+              message.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            <div className="flex items-center">
+              <span className="mr-2">
+                {message.type === "success" ? "✅" : "❌"}
+              </span>
+              <span className="font-medium">{message.text}</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
             <div className="mb-6">
@@ -284,19 +381,26 @@ const DailyLog = () => {
               ) : (
                 dayData.activities.map((activity) => (
                   <div
-                    key={activity.id}
+                    key={activity.activity_id}
                     className="flex justify-between items-center border-2 border-gray-100 rounded-lg p-4 hover:shadow-md transition-all duration-300"
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">
-                        {activity.title}
+                        {activity.activity_title}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {activity.category} • {activity.duration} min
+                        {activity.activity_type} • {activity.duration_min} min
                       </p>
                     </div>
                     <button
-                      onClick={() => removeItem("activities", activity.id)}
+                      onClick={() => {
+                        setDeleteDialog({
+                          show: true,
+                          type: "activities",
+                          id: activity.activity_id,
+                          name: activity.activity_title,
+                        });
+                      }}
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition-all duration-300"
                     >
                       🗑️
@@ -363,19 +467,26 @@ const DailyLog = () => {
               ) : (
                 dayData.meals.map((meal) => (
                   <div
-                    key={meal.id}
+                    key={meal.meal_id}
                     className="flex justify-between items-center border-2 border-gray-100 rounded-lg p-4 hover:shadow-md transition-all duration-300"
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">
-                        {meal.mealType}: {meal.description}
+                        {meal.type}: {meal.description}
                       </p>
                       <p className="text-sm text-gray-500">
                         {meal.calories} cal
                       </p>
                     </div>
                     <button
-                      onClick={() => removeItem("meals", meal.id)}
+                      onClick={() => {
+                        setDeleteDialog({
+                          show: true,
+                          type: "meals",
+                          id: meal.meal_id,
+                          name: meal.description,
+                        });
+                      }}
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition-all duration-300"
                     >
                       🗑️
@@ -444,7 +555,7 @@ const DailyLog = () => {
               ) : (
                 dayData.exercises.map((exercise) => (
                   <div
-                    key={exercise.id}
+                    key={exercise.exercise_id}
                     className="flex justify-between items-center border-2 border-gray-100 rounded-lg p-4 hover:shadow-md transition-all duration-300"
                   >
                     <div className="flex-1">
@@ -452,11 +563,18 @@ const DailyLog = () => {
                         {exercise.type}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {exercise.duration} min • {exercise.intensity}
+                        {exercise.duration_min} min • {exercise.intensity}
                       </p>
                     </div>
                     <button
-                      onClick={() => removeItem("exercises", exercise.id)}
+                      onClick={() => {
+                        setDeleteDialog({
+                          show: true,
+                          type: "exercises",
+                          id: exercise.exercise_id,
+                          name: exercise.type,
+                        });
+                      }}
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition-all duration-300"
                     >
                       🗑️
@@ -468,6 +586,33 @@ const DailyLog = () => {
           </div>
         </div>
       </div>
+
+      {deleteDialog.show && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">
+              Are you sure you want to delete "{deleteDialog.name}"?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() =>
+                  setDeleteDialog({ show: false, type: "", id: "", name: "" })
+                }
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

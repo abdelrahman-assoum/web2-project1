@@ -58,10 +58,10 @@ const Features = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 pt-20">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-blue-50 to-cyan-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-extrabold mb-4 bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
             Powerful Features
           </h1>
           <p className="text-xl text-gray-600">
@@ -76,7 +76,7 @@ const Features = () => {
               className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 text-center border border-gray-100"
             >
               <div
-                className={`inline-block bg-gradient-to-r ${feature.gradient} p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300`}
+                className={`inline-block bg-linear-to-r ${feature.gradient} p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300`}
               >
                 <div className="text-4xl">{feature.icon}</div>
               </div>

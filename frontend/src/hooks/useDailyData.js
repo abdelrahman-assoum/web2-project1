@@ -1,61 +1,133 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
-const STORAGE_KEY = "healthtrack_daily_logs";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-const getStoredData = (date) => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  const allData = stored ? JSON.parse(stored) : {};
-  return allData[date] || { activities: [], meals: [], exercises: [] };
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 const useDailyData = (date) => {
-  const [dayData, setDayData] = useState(() => getStoredData(date));
+  const [dayData, setDayData] = useState({
+    activities: [],
+    meals: [],
+    exercises: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setDayData(getStoredData(date));
+    fetchData();
   }, [date]);
 
-  const saveData = (newData) => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const allData = stored ? JSON.parse(stored) : {};
-    allData[date] = newData;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-    setDayData(newData);
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [activitiesRes, mealsRes, exercisesRes] = await Promise.all([
+        axios.get(`${API_URL}/activities/date/${date}`, {
+          headers: getAuthHeaders(),
+        }),
+        axios.get(`${API_URL}/meals/date/${date}`, {
+          headers: getAuthHeaders(),
+        }),
+        axios.get(`${API_URL}/exercises/date/${date}`, {
+          headers: getAuthHeaders(),
+        }),
+      ]);
+
+      setDayData({
+        activities: activitiesRes.data,
+        meals: mealsRes.data,
+        exercises: exercisesRes.data,
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch data");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const addActivity = (activity) => {
-    const newActivity = { ...activity, id: crypto.randomUUID() };
-    const newData = {
-      ...dayData,
-      activities: [...dayData.activities, newActivity],
-    };
-    saveData(newData);
+  const addActivity = async (activity) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/activities`,
+        {
+          activity_title: activity.title,
+          activity_type: activity.category,
+          duration_min: activity.duration,
+          date: date,
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      await fetchData();
+      return response.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "Failed to add activity");
+    }
   };
 
-  const addMeal = (meal) => {
-    const newMeal = { ...meal, id: crypto.randomUUID() };
-    const newData = { ...dayData, meals: [...dayData.meals, newMeal] };
-    saveData(newData);
+  const addMeal = async (meal) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/meals`,
+        {
+          type: meal.mealType,
+          description: meal.description,
+          calories: meal.calories,
+          date: date,
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      await fetchData();
+      return response.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "Failed to add meal");
+    }
   };
 
-  const addExercise = (exercise) => {
-    const newExercise = { ...exercise, id: crypto.randomUUID() };
-    const newData = {
-      ...dayData,
-      exercises: [...dayData.exercises, newExercise],
-    };
-    saveData(newData);
+  const addExercise = async (exercise) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/exercises`,
+        {
+          type: exercise.type,
+          duration_min: exercise.duration,
+          intensity: exercise.intensity,
+          date: date,
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      await fetchData();
+      return response.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "Failed to add exercise");
+    }
   };
 
-  const removeItem = (type, id) => {
-    const newData = {
-      ...dayData,
-      [type]: dayData[type].filter((item) => item.id !== id),
-    };
-    saveData(newData);
+  const removeItem = async (type, id) => {
+    try {
+      const endpoint = `${API_URL}/${type}/${id}`;
+      await axios.delete(endpoint, { headers: getAuthHeaders() });
+      await fetchData();
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "Failed to delete item");
+    }
   };
 
-  return { dayData, addActivity, addMeal, addExercise, removeItem };
+  return {
+    dayData,
+    addActivity,
+    addMeal,
+    addExercise,
+    removeItem,
+    isLoading,
+    error,
+  };
 };
 
 export default useDailyData;

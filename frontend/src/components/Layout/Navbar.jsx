@@ -1,11 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const Navbar = () => {
   const today = new Date().toISOString().split("T")[0];
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
@@ -21,6 +23,27 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Check if user is logged in by checking for token in localStorage
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
+    checkAuth();
+
+    // Listen for storage changes (login/logout in other tabs)
+    window.addEventListener("storage", checkAuth);
+    return () => window.removeEventListener("storage", checkAuth);
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    navigate("/");
+    closeMenu();
+  };
 
   const isHomePage = location.pathname === "/";
 
@@ -87,12 +110,29 @@ const Navbar = () => {
             >
               Contact
             </Link>
-            <Link
-              to={`/day/${today}`}
-              className="ml-2 bg-white text-indigo-600 px-5 py-2 rounded-full font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              📅 Daily Log
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to={`/day/${today}`}
+                  className="ml-2 bg-white text-indigo-600 px-5 py-2 rounded-full font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  📅 Daily Log
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 bg-red-500 text-white px-5 py-2 rounded-full font-semibold hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="ml-2 bg-white text-indigo-600 px-5 py-2 rounded-full font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                🔐 Login
+              </Link>
+            )}
           </div>
 
           <button
@@ -164,13 +204,31 @@ const Navbar = () => {
             >
               Contact
             </Link>
-            <Link
-              to={`/day/${today}`}
-              onClick={closeMenu}
-              className="block bg-white text-indigo-600 px-4 py-3 rounded-lg font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg text-center transition-all duration-300"
-            >
-              📅 Daily Log
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to={`/day/${today}`}
+                  onClick={closeMenu}
+                  className="block bg-white text-indigo-600 px-4 py-3 rounded-lg font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg text-center transition-all duration-300"
+                >
+                  📅 Daily Log
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full bg-red-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-600 shadow-lg text-center transition-all duration-300"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={closeMenu}
+                className="block bg-white text-indigo-600 px-4 py-3 rounded-lg font-semibold hover:bg-yellow-300 hover:text-indigo-700 shadow-lg text-center transition-all duration-300"
+              >
+                🔐 Login
+              </Link>
+            )}
           </div>
         )}
       </div>
